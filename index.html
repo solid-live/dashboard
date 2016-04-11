@@ -520,7 +520,7 @@
           <!-- small box -->
           <div class="small-box bg-green">
             <div class="inner">
-              <h3>{{ Math.round((100 * widgets.summary.tidy) / (widgets.summary.tidy + widgets.summary.work)) }}<sup style="font-size: 20px">%</sup></h3>
+              <h3>{{ (Math.round((100 * widgets.summary.tidy) / (widgets.summary.tidy + widgets.summary.work))) || 0 }}<sup style="font-size: 20px">%</sup></h3>
 
               <p>Efficiency</p>
             </div>
