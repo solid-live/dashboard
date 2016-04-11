@@ -76,7 +76,9 @@ function initView() {
         'dashboard': true,
         'summary': {
           work : 0,
-          tidy: 0
+          tidy: 0,
+          workmore: '#',
+          choresmore: '#'
         },
         'work': false,
         'chat': false,
@@ -198,6 +200,9 @@ function renderUser(userURI) {
       view.user.avatar = avatar.uri;
     }
     view.user.loggedIn = true;
+
+    view.widgets.summary.workmore = 'http://taskify.org/c/dash.php?destination=' + encodeURIComponent(userURI);
+    view.widgets.summary.choresmore = 'http://taskify.org/c/tidy.php?destination=' + encodeURIComponent(userURI);
 
     fetchWallets();
     addLogout();
