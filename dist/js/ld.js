@@ -1,7 +1,7 @@
 // GLOBALS
 var view;
 var kb, g, f;
-var workURI, choresURI, userURI;
+var workURI, choresURI, userURI, profileURI;
 var wallets = [];
 var solid;
 
@@ -114,12 +114,13 @@ function initSolid() {
 }
 
 
-// FETCH FUNCTION
+// FETCH FUNCTIONS
 function fetchStats() {
   var uri = workURI + 'today?source=' + encodeURIComponent(userURI);
   //var workURI = 'http://melvincarvalho.com:11088/today?source=https://melvincarvalho.com/%23me';
   console.log('fetching :' + uri);
   $.get(uri, function( work ) {
+    console.log(work);
     if (work && work['https://w3id.org/cc#amount']) {
       view.widgets.summary.work = work['https://w3id.org/cc#amount'];
     }
@@ -129,6 +130,7 @@ function fetchStats() {
   uri = choresURI + 'today?source=' + encodeURIComponent(userURI);
   console.log('fetching :' + uri);
   $.get(uri, function( work ) {
+    console.log(work);
     if (work && work['https://w3id.org/cc#amount']) {
       view.widgets.summary.tidy = work['https://w3id.org/cc#amount'];
     }
@@ -136,7 +138,6 @@ function fetchStats() {
 }
 
 function fetchWallets() {
-  initRDF();
 
   f.nowOrWhenFetched(userURI, undefined, function(ok, body) {
     console.log('fetched '+ userURI );
@@ -199,13 +200,7 @@ function renderUser(userURI) {
     view.user.loggedIn = true;
 
     fetchWallets();
-
-    $('#logout').on('click', function() {
-      console.log('logging out...');
-      view.user.loggedIn = false;
-      view.user.avatar = "dist/img/avatar3.png";
-      view.user.name = "Login";
-    })
+    addLogout();
 
   });
 
@@ -213,7 +208,13 @@ function renderUser(userURI) {
 
 // EVENT FUNCTIONS
 function addEvents() {
+  addLogin();
+}
+
+
+function addLogin() {
   $('#login').on('click', function() {
+    console.log('Logging in...');
     solid.login().then(function(webid){
       // authentication succeeded; do something with the WebID string
       console.log(webid);
@@ -228,6 +229,18 @@ function addEvents() {
   });
 }
 
+function addLogout() {
+
+  $('#logout').on('click', function() {
+    console.log('logging out...');
+    view.user.loggedIn = false;
+    view.user.avatar = "dist/img/avatar6.png";
+    view.user.name = "Login";
+    setTimeout(addLogin, 250);
+  })
+
+}
+
 
 // MAIN
 function main() {
@@ -235,9 +248,10 @@ function main() {
   addEvents();
 
   userURI = getParameterByName('profile');
+  profileURI = getParameterByName('profile');
 
   if (!userURI) return;
-  
+
   renderUser(userURI);
   fetchWallets();
 
