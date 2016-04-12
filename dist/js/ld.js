@@ -70,6 +70,14 @@ function initView() {
         status: 'Online',
         loggedIn : false
       },
+      profile: {
+        '@id' : 'https://melvincarvalho.com/#me',
+        name: 'Login',
+        avatar: "dist/img/avatar6.png",
+        role: 'Web Developer',
+        since: 'Nov. 2008',
+        status: 'Online'
+      },
       rightbar: {
         'layout': true,
         'activity': false,
@@ -123,6 +131,9 @@ function initApp() {
 
   app.wallets = [];
   app.workURI = undefined;
+  app.choresURI = undefined;
+  app.userURI = undefined;
+  app.profileURI = undefined;
 }
 
 // FETCH FUNCTIONS
@@ -261,7 +272,9 @@ function addLogin() {
       console.log(webid);
       view.user.loggedIn = true;
       app.userURI = webid;
-      renderUser(webid);
+      app.profileURI = webid;
+      renderUser();
+      renderProfile();
     }).catch(function(err) {
       // authentication failed; display some error message
       console.log(err)
@@ -293,8 +306,8 @@ function main() {
 
   if (!app.userURI) return;
 
-  renderUser(app.userURI);
-  renderProfile(app.profileURI);
+  renderUser();
+  renderProfile();
   fetchWallets();
 
 }
