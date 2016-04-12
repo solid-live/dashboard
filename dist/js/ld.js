@@ -1,13 +1,15 @@
-// GLOBALS
-var view;
+// model
 var kb, g, f;
-var workURI, choresURI, userURI, profileURI;
-var wallets = [];
-var solid;
-
 var CURR  = $rdf.Namespace("https://w3id.org/cc#");
 var FOAF  = $rdf.Namespace("http://xmlns.com/foaf/0.1/");
 var RDFS  = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+
+// view
+var view;
+
+// controller
+var solid;
+var app;
 
 
 // HELPER FUNCTIONS
@@ -26,6 +28,7 @@ function getParameterByName(name, url) {
 function init() {
   initView();
   initRDF();
+  initApp();
   initSolid();
 }
 
@@ -115,10 +118,16 @@ function initSolid() {
   solid = require('solid');
 }
 
+function initApp() {
+  app = app || {};
+
+  app.wallets = [];
+  app.workURI = undefined;
+}
 
 // FETCH FUNCTIONS
 function fetchStats() {
-  var uri = workURI + 'today?source=' + encodeURIComponent(userURI);
+  var uri = app.workURI + 'today?source=' + encodeURIComponent(app.userURI);
   //var workURI = 'http://melvincarvalho.com:11088/today?source=https://melvincarvalho.com/%23me';
   console.log('fetching :' + uri);
   $.get(uri, function( work ) {
@@ -129,7 +138,7 @@ function fetchStats() {
   });
 
   //var choresURI = 'http://melvincarvalho.com:11089/today?source=https://melvincarvalho.com/%23me';
-  uri = choresURI + 'today?source=' + encodeURIComponent(userURI);
+  uri = app.choresURI + 'today?source=' + encodeURIComponent(app.userURI);
   console.log('fetching :' + uri);
   $.get(uri, function( work ) {
     console.log(work);
@@ -141,15 +150,15 @@ function fetchStats() {
 
 function fetchWallets() {
 
-  f.nowOrWhenFetched(userURI, undefined, function(ok, body) {
-    console.log('fetched '+ userURI );
-    var w = g.statementsMatching($rdf.sym(userURI), CURR('wallet'));
-    console.log(wallets);
+  f.nowOrWhenFetched(app.userURI, undefined, function(ok, body) {
+    console.log('fetched '+ app.userURI );
+    var w = g.statementsMatching($rdf.sym(app.userURI), CURR('wallet'));
+    console.log(app.wallets);
     for (var i = 0; i < w.length; i++) {
       var wallet = w[i];
       var walletURI = wallet.object.uri;
       console.log('fetching : ' + walletURI);
-      wallets.push(walletURI);
+      app.wallets.push(walletURI);
 
       f.nowOrWhenFetched(walletURI.split('#')[0], undefined, function(ok, body) {
         console.log('fetched : ' + walletURI);
@@ -164,33 +173,33 @@ function fetchWallets() {
 // RENDER FUNCTIONS
 function renderWallets() {
   console.log('rendering wallets');
-  console.log(wallets);
-  for (var i = 0; i < wallets.length; i++) {
-    var wallet = wallets[i];
+  console.log(app.wallets);
+  for (var i = 0; i < app.wallets.length; i++) {
+    var wallet = app.wallets[i];
     var type = g.any($rdf.sym(wallet), RDFS('label'));
     console.log('type for ' + wallet + ' is ' + type);
     if (type.value === 'work') {
-      workURI = g.any($rdf.sym(wallet), CURR('api')).uri;
-      console.log(workURI);
+      app.workURI = g.any($rdf.sym(wallet), CURR('api')).uri;
+      console.log(app.workURI);
     }
     if (type.value === 'chores') {
-      choresURI = g.any($rdf.sym(wallet), CURR('api')).uri;
-      console.log(choresURI);
+      app.choresURI = g.any($rdf.sym(wallet), CURR('api')).uri;
+      console.log(app.choresURI);
     }
-    if (workURI && choresURI) {
+    if (app.workURI && app.choresURI) {
       fetchStats();
     }
   }
 }
 
 
-function renderUser(userURI) {
-  solid.identity.getProfile(userURI).then(function (parsedProfile) {
+function renderUser() {
+  solid.identity.getProfile(app.userURI).then(function (parsedProfile) {
     console.log('getProfile result: %o', parsedProfile);
     kb = parsedProfile.parsedGraph;
 
-    var name = kb.any($rdf.sym(userURI), FOAF('name'));
-    var avatar = kb.any($rdf.sym(userURI), FOAF('depiction')) || kb.any($rdf.sym(userURI), FOAF('img'));
+    var name = kb.any($rdf.sym(app.userURI), FOAF('name'));
+    var avatar = kb.any($rdf.sym(app.userURI), FOAF('depiction')) || kb.any($rdf.sym(app.userURI), FOAF('img'));
     console.log(name);
     console.log(avatar);
     if (name) {
@@ -201,8 +210,35 @@ function renderUser(userURI) {
     }
     view.user.loggedIn = true;
 
-    view.widgets.summary.workmore = 'http://taskify.org/c/dash.php?destination=' + encodeURIComponent(userURI);
-    view.widgets.summary.choresmore = 'http://taskify.org/c/tidy.php?destination=' + encodeURIComponent(userURI);
+    view.widgets.summary.workmore = 'http://taskify.org/c/dash.php?destination=' + encodeURIComponent(app.userURI);
+    view.widgets.summary.choresmore = 'http://taskify.org/c/tidy.php?destination=' + encodeURIComponent(app.userURI);
+
+    fetchWallets();
+    addLogout();
+
+  });
+
+}
+
+function renderProfile() {
+  solid.identity.getProfile(app.userURI).then(function (parsedProfile) {
+    console.log('getProfile result: %o', parsedProfile);
+    kb = parsedProfile.parsedGraph;
+
+    var name = kb.any($rdf.sym(app.userURI), FOAF('name'));
+    var avatar = kb.any($rdf.sym(app.userURI), FOAF('depiction')) || kb.any($rdf.sym(app.userURI), FOAF('img'));
+    console.log(name);
+    console.log(avatar);
+    if (name) {
+      view.profile.name = name.value;
+    }
+    if (avatar) {
+      view.profile.avatar = avatar.uri;
+    }
+    view.user.loggedIn = true;
+
+    view.widgets.summary.workmore = 'http://taskify.org/c/dash.php?destination=' + encodeURIComponent(app.userURI);
+    view.widgets.summary.choresmore = 'http://taskify.org/c/tidy.php?destination=' + encodeURIComponent(app.userURI);
 
     fetchWallets();
     addLogout();
@@ -224,7 +260,7 @@ function addLogin() {
       // authentication succeeded; do something with the WebID string
       console.log(webid);
       view.user.loggedIn = true;
-      userURI = webid;
+      app.userURI = webid;
       renderUser(webid);
     }).catch(function(err) {
       // authentication failed; display some error message
@@ -252,12 +288,13 @@ function main() {
   init();
   addEvents();
 
-  userURI = getParameterByName('profile');
-  profileURI = getParameterByName('profile');
+  app.userURI = getParameterByName('profile');
+  app.profileURI = getParameterByName('profile');
 
-  if (!userURI) return;
+  if (!app.userURI) return;
 
-  renderUser(userURI);
+  renderUser(app.userURI);
+  renderProfile(app.profileURI);
   fetchWallets();
 
 }
@@ -265,5 +302,8 @@ function main() {
 
 
 $(function () {
+
+
+
   main();
 });
