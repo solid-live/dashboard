@@ -89,6 +89,7 @@ function initView() {
           work : 0,
           tidy: 0,
           workmore: '#',
+          piemore: '#',
           choresmore: '#'
         },
         'work': false,
@@ -222,6 +223,7 @@ function renderUser() {
     view.user.loggedIn = true;
 
     view.widgets.summary.workmore = 'http://taskify.org/c/dash.php?destination=' + encodeURIComponent(app.userURI);
+    view.widgets.summary.piemore = 'http://taskify.org/c/pie.php?destination=' + encodeURIComponent(app.userURI);
     view.widgets.summary.choresmore = 'http://taskify.org/c/tidy.php?destination=' + encodeURIComponent(app.userURI);
 
     fetchWallets();
@@ -249,6 +251,7 @@ function renderProfile() {
     view.user.loggedIn = true;
 
     view.widgets.summary.workmore = 'http://taskify.org/c/dash.php?destination=' + encodeURIComponent(app.userURI);
+    view.widgets.summary.piemore = 'http://taskify.org/c/pie.php?destination=' + encodeURIComponent(app.userURI);
     view.widgets.summary.choresmore = 'http://taskify.org/c/tidy.php?destination=' + encodeURIComponent(app.userURI);
 
     fetchWallets();
